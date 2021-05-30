@@ -4,6 +4,11 @@ from django.db import models
 User = get_user_model()
 
 
+class Group(models.Model):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255)
+
+
 class Post(models.Model):
     text = models.TextField()
     pub_date = models.DateTimeField(
@@ -11,6 +16,13 @@ class Post(models.Model):
     )
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="posts"
+    )
+    group = models.ForeignKey(
+        Group,
+        on_delete=models.SET_NULL,
+        related_name='group',
+        blank=True,
+        null=True,
     )
 
     def __str__(self):
@@ -28,3 +40,24 @@ class Comment(models.Model):
     created = models.DateTimeField(
         "Дата добавления", auto_now_add=True, db_index=True
     )
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        User,
+        related_name='follower',
+        verbose_name='Подписчик',
+        on_delete=models.CASCADE,
+    )
+    following = models.ForeignKey(
+        User,
+        related_name='following',
+        verbose_name='Автор',
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'following'], name='unique_follow')
+        ]
